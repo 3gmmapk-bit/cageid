@@ -13,7 +13,7 @@ class AthleteDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(athlete.name),
+        title: Text(athlete.fullName),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -31,7 +31,7 @@ class AthleteDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             Text(
-              athlete.name,
+              athlete.fullName,
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,

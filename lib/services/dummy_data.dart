@@ -3,7 +3,7 @@ import '../models/athlete.dart';
 final List<Athlete> athletes = [
   Athlete(
     id: '1',
-    name: 'Ovais Shah',
+    fullName: 'Ovais Shah',
     nickname: 'The Warrior',
     gym: '3G MMA',
     weightClass: 'Bantamweight',
@@ -14,7 +14,7 @@ final List<Athlete> athletes = [
 
   Athlete(
     id: '2',
-    name: 'Shagufta Asif',
+    fullName: 'Shagufta Asif',
     nickname: 'North Wolf',
     gym: '3G MMA',
     weightClass: 'Atomweight',
@@ -25,7 +25,7 @@ final List<Athlete> athletes = [
 
   Athlete(
     id: '3',
-    name: 'Bano Butt',
+    fullName: 'Bano Butt',
     nickname: 'Shark',
     gym: 'Fight Fortress',
     weightClass: 'Strawweight',

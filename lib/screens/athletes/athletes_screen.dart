@@ -1,50 +1,125 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dummy_data.dart';
-import 'athlete_detail_screen.dart';
+import '../../models/athlete.dart';
+import '../../services/athlete_service.dart';
+import 'add_athlete_screen.dart';
 
-class AthletesScreen extends StatelessWidget {
+class AthletesScreen extends StatefulWidget {
   const AthletesScreen({super.key});
 
   @override
+  State<AthletesScreen> createState() =>
+      _AthletesScreenState();
+}
+
+class _AthletesScreenState
+    extends State<AthletesScreen> {
+
+  final service = AthleteService();
+
+  late Future<List<Athlete>>
+  athletesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    athletesFuture =
+        service.getAthletes();
+  }
+
+  void refresh() {
+    setState(() {
+      athletesFuture =
+          service.getAthletes();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+
       appBar: AppBar(
-        title: const Text('Athletes'),
+        title:
+        const Text('Athletes'),
       ),
-      body: ListView.builder(
-        itemCount: athletes.length,
-        itemBuilder: (context, index) {
 
-          final athlete = athletes[index];
+      floatingActionButton:
+      FloatingActionButton(
+        child:
+        const Icon(Icons.add),
 
-          return Card(
-            margin: const EdgeInsets.all(8),
-            child: ListTile(
-              leading: const CircleAvatar(
-                child: Icon(Icons.person),
-              ),
+        onPressed: () async {
 
-              title: Text(athlete.name),
-
-              subtitle: Text(
-                '${athlete.wins}-${athlete.losses}-${athlete.draws}',
-              ),
-
-              trailing: const Icon(Icons.arrow_forward_ios),
-
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        AthleteDetailScreen(
-                      athlete: athlete,
-                    ),
-                  ),
-                );
-              },
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+              const AddAthleteScreen(),
             ),
+          );
+
+          refresh();
+        },
+      ),
+
+      body: FutureBuilder<
+          List<Athlete>>(
+        future: athletesFuture,
+
+        builder:
+            (context, snapshot) {
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child:
+              CircularProgressIndicator(),
+            );
+          }
+
+          final athletes =
+              snapshot.data!;
+
+          return ListView.builder(
+            itemCount:
+            athletes.length,
+
+            itemBuilder:
+                (context, index) {
+
+              final athlete =
+              athletes[index];
+
+              return ListTile(
+
+                title: Text(
+                  athlete.fullName,
+                ),
+
+                subtitle: Text(
+                  athlete.weightClass,
+                ),
+
+                trailing:
+                IconButton(
+                  icon:
+                  const Icon(
+                    Icons.delete,
+                  ),
+
+                  onPressed:
+                      () async {
+
+                    await service
+                        .deleteAthlete(
+                        athlete.id!);
+
+                    refresh();
+                  },
+                ),
+              );
+            },
           );
         },
       ),

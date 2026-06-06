@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "961779225294",
+    "project_id": "cageid-ffa51",
+    "storage_bucket": "cageid-ffa51.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961779225294:android:b81ab9bd61e9be13ee769f",
+        "android_client_info": {
+          "package_name": "com.example.cage_id"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "961779225294-4pas326o3ub300t665l07qlhc61597tq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjcxSLr_QWGHfyLoknTDuD6F70y-VZvBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "961779225294-4pas326o3ub300t665l07qlhc61597tq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

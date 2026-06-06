@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
-import 'core/theme/app_theme.dart';
-import 'screens/splash/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+import 'firebase_options.dart';
+import 'services/supabase_service.dart';
+
+import 'screens/home/home_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize Supabase
+  await SupabaseService.initialize();
+
   runApp(const CageIDApp());
 }
 
@@ -14,8 +28,17 @@ class CageIDApp extends StatelessWidget {
     return MaterialApp(
       title: 'CageID',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const SplashScreen(),
+
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          brightness: Brightness.dark,
+        ),
+      ),
+
+      home: const HomeScreen(),
     );
   }
 }
