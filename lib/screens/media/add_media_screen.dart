@@ -71,8 +71,9 @@ class _AddMediaScreenState extends State<AddMediaScreen> {
       final imageUrl = await storageService.uploadImage(
         imageBytes!,
         fileName,
+        folder: 'media',
       );
-
+    
       final media = MediaItem(
         title: titleController.text.trim(),
         imageUrl: imageUrl,

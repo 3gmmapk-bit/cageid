@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../models/media_item.dart';
 
 class MediaDetailScreen extends StatelessWidget {
@@ -27,17 +26,21 @@ class MediaDetailScreen extends StatelessWidget {
                 return const SizedBox(
                   height: 250,
                   child: Center(
-                    child: Icon(Icons.broken_image, size: 60),
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 60,
+                    ),
                   ),
                 );
               },
             ),
-
             Card(
               margin: const EdgeInsets.all(12),
               child: ListTile(
                 title: Text(media.title),
-                subtitle: Text('Category: ${media.category}'),
+                subtitle: Text(
+                  'Category: ${media.category}',
+                ),
               ),
             ),
           ],
