@@ -6,7 +6,7 @@ import '../rankings/rankings_screen.dart';
 import '../events/events_screen.dart';
 import '../gyms/gyms_screen.dart';
 import '../coaches/coaches_screen.dart';
-
+import '../media/media_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -54,6 +54,11 @@ class HomeScreen extends StatelessWidget {
               title: 'Gyms',
               icon: Icons.fitness_center,
               onTap: () => openScreen(context, const GymsScreen()),
+            ),
+            HomeCard(
+              title: 'Media',
+              icon: Icons.photo_library,
+              onTap: () => openScreen(context, const MediaScreen()),
             ),
             HomeCard(
               title: 'Coaches',
