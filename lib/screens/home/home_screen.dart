@@ -7,6 +7,7 @@ import '../events/events_screen.dart';
 import '../gyms/gyms_screen.dart';
 import '../coaches/coaches_screen.dart';
 import '../media/media_screen.dart';
+import '../news/news_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -30,6 +31,11 @@ class HomeScreen extends StatelessWidget {
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
           children: [
+            HomeCard(
+              title: 'News',
+              icon: Icons.article,
+              onTap: () => openScreen(context, const NewsScreen()),
+            ),
             HomeCard(
               title: 'Search',
               icon: Icons.search,
