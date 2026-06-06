@@ -1,16 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class AuthService {
-  final firebase_auth.FirebaseAuth auth =
-      firebase_auth.FirebaseAuth.instance;
-
+  final FirebaseAuth auth = FirebaseAuth.instance;
   final SupabaseClient supabase = Supabase.instance.client;
 
-  firebase_auth.User? get currentUser => auth.currentUser;
+  User? get currentUser => auth.currentUser;
 
-  Stream<firebase_auth.User?> get authStateChanges =>
-      auth.authStateChanges();
+  Stream<User?> get authStateChanges => auth.authStateChanges();
 
   Future<void> register({
     required String email,
