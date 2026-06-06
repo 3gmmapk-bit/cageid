@@ -8,6 +8,12 @@ class Athlete {
   final int losses;
   final int draws;
 
+  final String? profileImage;
+  final String? bio;
+  final String? instagram;
+  final String? facebook;
+  final String? country;
+
   Athlete({
     this.id,
     required this.fullName,
@@ -17,6 +23,11 @@ class Athlete {
     required this.wins,
     required this.losses,
     required this.draws,
+    this.profileImage,
+    this.bio,
+    this.instagram,
+    this.facebook,
+    this.country,
   });
 
   factory Athlete.fromJson(Map<String, dynamic> json) {
@@ -29,6 +40,11 @@ class Athlete {
       wins: json['wins'] ?? 0,
       losses: json['losses'] ?? 0,
       draws: json['draws'] ?? 0,
+      profileImage: json['profile_image'],
+      bio: json['bio'],
+      instagram: json['instagram'],
+      facebook: json['facebook'],
+      country: json['country'],
     );
   }
 
@@ -41,6 +57,11 @@ class Athlete {
       'wins': wins,
       'losses': losses,
       'draws': draws,
+      'profile_image': profileImage,
+      'bio': bio,
+      'instagram': instagram,
+      'facebook': facebook,
+      'country': country,
     };
   }
 }
