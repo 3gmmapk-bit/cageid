@@ -1,3 +1,4 @@
+import '../search/search_screen.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/home_card.dart';
 import '../athletes/athletes_screen.dart';
@@ -29,6 +30,11 @@ class HomeScreen extends StatelessWidget {
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
           children: [
+            HomeCard(
+              title: 'Search',
+              icon: Icons.search,
+              onTap: () => openScreen(context, const SearchScreen()),
+            ),
             HomeCard(
               title: 'Athletes',
               icon: Icons.person,
