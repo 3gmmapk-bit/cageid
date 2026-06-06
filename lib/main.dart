@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/auth/auth_gate.dart';
-import 'firebase_options.dart';
-import 'services/supabase_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'screens/home/home_screen.dart';
+import 'firebase_options.dart';
+import 'screens/auth/auth_gate.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+  await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Supabase
-  await SupabaseService.initialize();
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  await NotificationService().initialize();
 
   runApp(const CageIDApp());
 }
@@ -26,18 +32,13 @@ class CageIDApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CageID',
+      title: dotenv.env['APP_NAME'] ?? 'CageID',
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red,
-          brightness: Brightness.dark,
-        ),
+        colorSchemeSeed: Colors.red,
       ),
-
       home: const AuthGate(),
     );
   }
