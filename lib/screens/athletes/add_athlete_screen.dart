@@ -23,11 +23,14 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
   final bioController = TextEditingController();
   final instagramController = TextEditingController();
   final facebookController = TextEditingController();
+  final rankingController = TextEditingController();
 
   final AthleteService service = AthleteService();
 
   Uint8List? imageBytes;
   bool isLoading = false;
+
+  String athleteType = 'Amateur';
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
@@ -47,7 +50,9 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
   Future<void> saveAthlete() async {
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Full name is required')),
+        const SnackBar(
+          content: Text('Full Name is required'),
+        ),
       );
       return;
     }
@@ -79,6 +84,9 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
         wins: 0,
         losses: 0,
         draws: 0,
+        rankingPoints:
+            int.tryParse(rankingController.text.trim()) ?? 0,
+        athleteType: athleteType,
       );
 
       await service.addAthlete(athlete);
@@ -86,7 +94,9 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Athlete added successfully')),
+        const SnackBar(
+          content: Text('Athlete Added Successfully'),
+        ),
       );
 
       Navigator.pop(context, true);
@@ -94,7 +104,9 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding athlete: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -103,19 +115,6 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
         });
       }
     }
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    nicknameController.dispose();
-    gymController.dispose();
-    weightClassController.dispose();
-    countryController.dispose();
-    bioController.dispose();
-    instagramController.dispose();
-    facebookController.dispose();
-    super.dispose();
   }
 
   Widget buildTextField({
@@ -137,6 +136,21 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
   }
 
   @override
+  void dispose() {
+    nameController.dispose();
+    nicknameController.dispose();
+    gymController.dispose();
+    weightClassController.dispose();
+    countryController.dispose();
+    bioController.dispose();
+    instagramController.dispose();
+    facebookController.dispose();
+    rankingController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -151,11 +165,13 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
               child: CircleAvatar(
                 radius: 55,
                 backgroundImage:
-                    imageBytes != null ? MemoryImage(imageBytes!) : null,
+                    imageBytes != null
+                        ? MemoryImage(imageBytes!)
+                        : null,
                 child: imageBytes == null
                     ? const Icon(
                         Icons.camera_alt,
-                        size: 42,
+                        size: 40,
                       )
                     : null,
               ),
@@ -184,13 +200,44 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
             ),
 
             buildTextField(
+              controller: rankingController,
+              label: 'Ranking Points',
+            ),
+
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: DropdownButtonFormField<String>(
+                value: athleteType,
+                decoration: const InputDecoration(
+                  labelText: 'Athlete Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Amateur',
+                    child: Text('Amateur'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Professional',
+                    child: Text('Professional'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    athleteType = value!;
+                  });
+                },
+              ),
+            ),
+
+            buildTextField(
               controller: countryController,
               label: 'Country',
             ),
 
             buildTextField(
               controller: bioController,
-              label: 'Bio',
+              label: 'Biography',
               maxLines: 4,
             ),
 
@@ -211,11 +258,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
               child: ElevatedButton(
                 onPressed: isLoading ? null : saveAthlete,
                 child: isLoading
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const CircularProgressIndicator()
                     : const Text('Save Athlete'),
               ),
             ),

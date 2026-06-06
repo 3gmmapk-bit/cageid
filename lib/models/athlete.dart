@@ -14,6 +14,9 @@ class Athlete {
   final String? facebook;
   final String? country;
 
+  final int rankingPoints;
+  final String athleteType;
+
   Athlete({
     this.id,
     required this.fullName,
@@ -28,6 +31,8 @@ class Athlete {
     this.instagram,
     this.facebook,
     this.country,
+    required this.rankingPoints,
+    required this.athleteType,
   });
 
   factory Athlete.fromJson(Map<String, dynamic> json) {
@@ -45,6 +50,8 @@ class Athlete {
       instagram: json['instagram'],
       facebook: json['facebook'],
       country: json['country'],
+      rankingPoints: json['ranking_points'] ?? 0,
+      athleteType: json['athlete_type'] ?? 'Amateur',
     );
   }
 
@@ -62,6 +69,8 @@ class Athlete {
       'instagram': instagram,
       'facebook': facebook,
       'country': country,
+      'ranking_points': rankingPoints,
+      'athlete_type': athleteType,
     };
   }
 }
