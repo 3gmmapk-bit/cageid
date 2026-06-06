@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/athlete.dart';
 import '../../services/athlete_service.dart';
+import '../../services/role_service.dart';
 import 'add_athlete_screen.dart';
 import 'athlete_detail_screen.dart';
 
@@ -14,53 +15,70 @@ class AthletesScreen extends StatefulWidget {
 
 class _AthletesScreenState extends State<AthletesScreen> {
   final AthleteService service = AthleteService();
-  final TextEditingController searchController = TextEditingController();
+  final RoleService roleService = RoleService();
 
-  late Future<List<Athlete>> athletesFuture;
-  String searchQuery = '';
+  Future<void> openAddAthlete() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AddAthleteScreen(),
+      ),
+    );
 
-  @override
-  void initState() {
-    super.initState();
-    athletesFuture = service.getAthletes();
-
-    searchController.addListener(() {
-      setState(() {
-        searchQuery = searchController.text.toLowerCase().trim();
-      });
-    });
+    setState(() {});
   }
 
-  void refresh() {
-    setState(() {
-      athletesFuture = service.getAthletes();
-    });
+  Future<void> deleteAthlete(String id) async {
+    await service.deleteAthlete(id);
+    setState(() {});
   }
 
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
+  Widget buildAddButton() {
+    return FutureBuilder<bool>(
+      future: roleService.canManageAthletes(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return FloatingActionButton(
+          onPressed: openAddAthlete,
+          child: const Icon(Icons.add),
+        );
+      },
+    );
   }
 
-  List<Athlete> filterAthletes(List<Athlete> athletes) {
-    if (searchQuery.isEmpty) {
-      return athletes;
+  Widget buildDeleteButton(String athleteId) {
+    return FutureBuilder<bool>(
+      future: roleService.isSuperAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await deleteAthlete(athleteId);
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildProfileImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return const CircleAvatar(
+        child: Icon(Icons.person),
+      );
     }
 
-    return athletes.where((athlete) {
-      final name = athlete.fullName.toLowerCase();
-      final nickname = athlete.nickname.toLowerCase();
-      final gym = athlete.gym.toLowerCase();
-      final weightClass = athlete.weightClass.toLowerCase();
-      final country = athlete.country?.toLowerCase() ?? '';
-
-      return name.contains(searchQuery) ||
-          nickname.contains(searchQuery) ||
-          gym.contains(searchQuery) ||
-          weightClass.contains(searchQuery) ||
-          country.contains(searchQuery);
-    }).toList();
+    return CircleAvatar(
+      backgroundImage: NetworkImage(imageUrl),
+      onBackgroundImageError: (_, __) {},
+      child: null,
+    );
   }
 
   @override
@@ -69,142 +87,73 @@ class _AthletesScreenState extends State<AthletesScreen> {
       appBar: AppBar(
         title: const Text('Athletes'),
       ),
+      floatingActionButton: buildAddButton(),
+      body: FutureBuilder<List<Athlete>>(
+        future: service.getAthletes(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddAthleteScreen(),
-            ),
-          );
-
-          refresh();
-        },
-        child: const Icon(Icons.add),
-      ),
-
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Search athletes...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          searchController.clear();
-                        },
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error loading athletes: ${snapshot.error}',
+                textAlign: TextAlign.center,
               ),
-            ),
-          ),
+            );
+          }
 
-          Expanded(
-            child: FutureBuilder<List<Athlete>>(
-              future: athletesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
+          final athletes = snapshot.data ?? [];
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Error loading athletes: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                      ),
+          if (athletes.isEmpty) {
+            return const Center(
+              child: Text('No athletes found.'),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: athletes.length,
+            itemBuilder: (context, index) {
+              final athlete = athletes[index];
+
+              return Card(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: ListTile(
+                  leading: buildProfileImage(athlete.profileImage),
+                  title: Text(
+                    athlete.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                }
-
-                final allAthletes = snapshot.data ?? [];
-                final filteredAthletes = filterAthletes(allAthletes);
-
-                if (allAthletes.isEmpty) {
-                  return const Center(
-                    child: Text('No athletes added yet'),
-                  );
-                }
-
-                if (filteredAthletes.isEmpty) {
-                  return const Center(
-                    child: Text('No athletes found'),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    refresh();
-                  },
-                  child: ListView.builder(
-                    itemCount: filteredAthletes.length,
-                    itemBuilder: (context, index) {
-                      final athlete = filteredAthletes[index];
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: athlete.profileImage != null &&
-                                    athlete.profileImage!.isNotEmpty
-                                ? NetworkImage(athlete.profileImage!)
-                                : null,
-                            child: athlete.profileImage == null ||
-                                    athlete.profileImage!.isEmpty
-                                ? const Icon(Icons.person)
-                                : null,
-                          ),
-                          title: Text(
-                            athlete.fullName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${athlete.nickname.isNotEmpty ? athlete.nickname : 'No nickname'} • ${athlete.weightClass}',
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              if (athlete.id == null) return;
-
-                              await service.deleteAthlete(athlete.id!);
-                              refresh();
-                            },
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AthleteDetailScreen(
-                                  athlete: athlete,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
                   ),
-                );
-              },
-            ),
-          ),
-        ],
+                  subtitle: Text(
+                    '${athlete.nickname}\n'
+                    '${athlete.weightClass} • ${athlete.athleteType}\n'
+                    '${athlete.gym} • ${athlete.wins}-${athlete.losses}-${athlete.draws}',
+                  ),
+                  isThreeLine: true,
+                  trailing: buildDeleteButton(athlete.id ?? ''),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AthleteDetailScreen(
+                          athlete: athlete,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

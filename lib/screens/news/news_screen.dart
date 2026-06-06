@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/news_article.dart';
 import '../../services/news_service.dart';
+import '../../services/role_service.dart';
 import 'add_news_screen.dart';
 import 'news_detail_screen.dart';
 
@@ -14,6 +15,7 @@ class NewsScreen extends StatefulWidget {
 
 class _NewsScreenState extends State<NewsScreen> {
   final NewsService service = NewsService();
+  final RoleService roleService = RoleService();
 
   Future<void> openAddNews() async {
     await Navigator.push(
@@ -29,6 +31,40 @@ class _NewsScreenState extends State<NewsScreen> {
   Future<void> deleteNews(String id) async {
     await service.deleteNews(id);
     setState(() {});
+  }
+
+  Widget buildAddButton() {
+    return FutureBuilder<bool>(
+      future: roleService.canPublishNews(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return FloatingActionButton(
+          onPressed: openAddNews,
+          child: const Icon(Icons.add),
+        );
+      },
+    );
+  }
+
+  Widget buildDeleteButton(String newsId) {
+    return FutureBuilder<bool>(
+      future: roleService.isSuperAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await deleteNews(newsId);
+          },
+        );
+      },
+    );
   }
 
   Widget buildNewsImage(String? url) {
@@ -57,16 +93,21 @@ class _NewsScreenState extends State<NewsScreen> {
     );
   }
 
+  String shortContent(String content) {
+    if (content.length <= 120) {
+      return content;
+    }
+
+    return '${content.substring(0, 120)}...';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('News Feed'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: openAddNews,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: buildAddButton(),
       body: FutureBuilder<List<NewsArticle>>(
         future: service.getNews(),
         builder: (context, snapshot) {
@@ -78,7 +119,10 @@ class _NewsScreenState extends State<NewsScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading news: ${snapshot.error}'),
+              child: Text(
+                'Error loading news: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
             );
           }
 
@@ -128,9 +172,7 @@ class _NewsScreenState extends State<NewsScreen> {
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        article.content.length > 120
-                            ? '${article.content.substring(0, 120)}...'
-                            : article.content,
+                        shortContent(article.content),
                       ),
                     ),
 
@@ -149,12 +191,8 @@ class _NewsScreenState extends State<NewsScreen> {
                             );
                           },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: article.id == null
-                              ? null
-                              : () => deleteNews(article.id!),
-                        ),
+                        if (article.id != null)
+                          buildDeleteButton(article.id!),
                       ],
                     ),
                   ],

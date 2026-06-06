@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../profile/user_profile_screen.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/home_card.dart';
 
@@ -62,6 +62,14 @@ class HomeScreen extends StatelessWidget {
               onTap: () => openScreen(
                 context,
                 const RankingsScreen(),
+              ),
+            ),
+            HomeCard(
+              title: 'Profile',
+              icon: Icons.person,
+              onTap: () => openScreen(
+                context,
+                const UserProfileScreen(),
               ),
             ),
             HomeCard(

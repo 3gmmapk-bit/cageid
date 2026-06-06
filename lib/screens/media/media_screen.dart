@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/media_item.dart';
 import '../../services/media_service.dart';
+import '../../services/role_service.dart';
 import 'add_media_screen.dart';
 import 'media_detail_screen.dart';
 
@@ -14,6 +15,7 @@ class MediaScreen extends StatefulWidget {
 
 class _MediaScreenState extends State<MediaScreen> {
   final MediaService service = MediaService();
+  final RoleService roleService = RoleService();
 
   Future<void> openAddMedia() async {
     await Navigator.push(
@@ -29,6 +31,40 @@ class _MediaScreenState extends State<MediaScreen> {
   Future<void> deleteMedia(String id) async {
     await service.deleteMedia(id);
     setState(() {});
+  }
+
+  Widget buildAddButton() {
+    return FutureBuilder<bool>(
+      future: roleService.canUploadMedia(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return FloatingActionButton(
+          onPressed: openAddMedia,
+          child: const Icon(Icons.add),
+        );
+      },
+    );
+  }
+
+  Widget buildDeleteButton(String mediaId) {
+    return FutureBuilder<bool>(
+      future: roleService.isSuperAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await deleteMedia(mediaId);
+          },
+        );
+      },
+    );
   }
 
   Widget buildMediaImage(String url) {
@@ -53,10 +89,7 @@ class _MediaScreenState extends State<MediaScreen> {
       appBar: AppBar(
         title: const Text('Media'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: openAddMedia,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: buildAddButton(),
       body: FutureBuilder<List<MediaItem>>(
         future: service.getMedia(),
         builder: (context, snapshot) {
@@ -68,7 +101,10 @@ class _MediaScreenState extends State<MediaScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading media: ${snapshot.error}'),
+              child: Text(
+                'Error loading media: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
             );
           }
 
@@ -97,6 +133,9 @@ class _MediaScreenState extends State<MediaScreen> {
                   ),
                   title: Text(item.title),
                   subtitle: Text(item.category),
+                  trailing: item.id == null
+                      ? const SizedBox.shrink()
+                      : buildDeleteButton(item.id!),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -107,12 +146,6 @@ class _MediaScreenState extends State<MediaScreen> {
                       ),
                     );
                   },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: item.id == null
-                        ? null
-                        : () => deleteMedia(item.id!),
-                  ),
                 ),
               );
             },

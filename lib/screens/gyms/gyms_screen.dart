@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/gym.dart';
 import '../../services/gym_service.dart';
+import '../../services/role_service.dart';
 import 'add_gym_screen.dart';
 import 'gym_detail_screen.dart';
 
@@ -14,6 +15,7 @@ class GymsScreen extends StatefulWidget {
 
 class _GymsScreenState extends State<GymsScreen> {
   final GymService service = GymService();
+  final RoleService roleService = RoleService();
 
   Future<void> openAddGym() async {
     await Navigator.push(
@@ -31,16 +33,47 @@ class _GymsScreenState extends State<GymsScreen> {
     setState(() {});
   }
 
+  Widget buildAddButton() {
+    return FutureBuilder<bool>(
+      future: roleService.canManageAthletes(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return FloatingActionButton(
+          onPressed: openAddGym,
+          child: const Icon(Icons.add),
+        );
+      },
+    );
+  }
+
+  Widget buildDeleteButton(String gymId) {
+    return FutureBuilder<bool>(
+      future: roleService.isSuperAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await deleteGym(gymId);
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gyms'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: openAddGym,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: buildAddButton(),
       body: FutureBuilder<List<Gym>>(
         future: service.getGyms(),
         builder: (context, snapshot) {
@@ -52,7 +85,10 @@ class _GymsScreenState extends State<GymsScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading gyms: ${snapshot.error}'),
+              child: Text(
+                'Error loading gyms: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
             );
           }
 
@@ -60,7 +96,7 @@ class _GymsScreenState extends State<GymsScreen> {
 
           if (gyms.isEmpty) {
             return const Center(
-              child: Text('No gyms found. Add your first gym.'),
+              child: Text('No gyms found.'),
             );
           }
 
@@ -80,20 +116,19 @@ class _GymsScreenState extends State<GymsScreen> {
                   ),
                   title: Text(gym.name),
                   subtitle: Text('${gym.city}, ${gym.country}'),
+                  trailing: gym.id == null
+                      ? const SizedBox.shrink()
+                      : buildDeleteButton(gym.id!),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => GymDetailScreen(gym: gym),
+                        builder: (_) => GymDetailScreen(
+                          gym: gym,
+                        ),
                       ),
                     );
                   },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: gym.id == null
-                        ? null
-                        : () => deleteGym(gym.id!),
-                  ),
                 ),
               );
             },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/coach.dart';
 import '../../services/coach_service.dart';
+import '../../services/role_service.dart';
 import 'add_coach_screen.dart';
 import 'coach_detail_screen.dart';
 
@@ -14,6 +15,7 @@ class CoachesScreen extends StatefulWidget {
 
 class _CoachesScreenState extends State<CoachesScreen> {
   final CoachService service = CoachService();
+  final RoleService roleService = RoleService();
 
   Future<void> openAddCoach() async {
     await Navigator.push(
@@ -31,16 +33,47 @@ class _CoachesScreenState extends State<CoachesScreen> {
     setState(() {});
   }
 
+  Widget buildAddButton() {
+    return FutureBuilder<bool>(
+      future: roleService.canManageAthletes(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return FloatingActionButton(
+          onPressed: openAddCoach,
+          child: const Icon(Icons.add),
+        );
+      },
+    );
+  }
+
+  Widget buildDeleteButton(String coachId) {
+    return FutureBuilder<bool>(
+      future: roleService.isSuperAdmin(),
+      builder: (context, snapshot) {
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await deleteCoach(coachId);
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Coaches'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: openAddCoach,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: buildAddButton(),
       body: FutureBuilder<List<Coach>>(
         future: service.getCoaches(),
         builder: (context, snapshot) {
@@ -52,7 +85,10 @@ class _CoachesScreenState extends State<CoachesScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading coaches: ${snapshot.error}'),
+              child: Text(
+                'Error loading coaches: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
             );
           }
 
@@ -60,7 +96,7 @@ class _CoachesScreenState extends State<CoachesScreen> {
 
           if (coaches.isEmpty) {
             return const Center(
-              child: Text('No coaches found. Add your first coach.'),
+              child: Text('No coaches found.'),
             );
           }
 
@@ -79,21 +115,22 @@ class _CoachesScreenState extends State<CoachesScreen> {
                     child: Icon(Icons.sports_mma),
                   ),
                   title: Text(coach.name),
-                  subtitle: Text('${coach.specialization} • ${coach.gym}'),
+                  subtitle: Text(
+                    '${coach.specialization} • ${coach.gym}',
+                  ),
+                  trailing: coach.id == null
+                      ? const SizedBox.shrink()
+                      : buildDeleteButton(coach.id!),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CoachDetailScreen(coach: coach),
+                        builder: (_) => CoachDetailScreen(
+                          coach: coach,
+                        ),
                       ),
                     );
                   },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: coach.id == null
-                        ? null
-                        : () => deleteCoach(coach.id!),
-                  ),
                 ),
               );
             },
