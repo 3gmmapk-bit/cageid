@@ -8,6 +8,7 @@ import '../gyms/gyms_screen.dart';
 import '../coaches/coaches_screen.dart';
 import '../media/media_screen.dart';
 import '../news/news_screen.dart';
+import '../dashboard/dashboard_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -31,6 +32,12 @@ class HomeScreen extends StatelessWidget {
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
           children: [
+            HomeCard(
+              title: 'Dashboard',
+              icon: Icons.analytics,
+              onTap: () => openScreen(
+              context, const DashboardScreen()),
+            ),
             HomeCard(
               title: 'News',
               icon: Icons.article,
