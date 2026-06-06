@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/athlete.dart';
 import '../../services/athlete_service.dart';
-import '../../services/event_service.dart';
 import '../athletes/athlete_detail_screen.dart';
-import '../events/event_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,45 +13,81 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final AthleteService athleteService = AthleteService();
-  final EventService eventService = EventService();
-
   final searchController = TextEditingController();
 
-  List<Athlete> athletes = [];
-  List<Map<String, dynamic>> events = [];
+  String selectedWeightClass = 'All';
+  String selectedCountry = 'All';
+  String selectedAthleteType = 'All';
+  String selectedGym = 'All';
+  String selectedCoach = 'All';
 
   bool isLoading = false;
-  String searchType = 'Athletes';
+  List<Athlete> results = [];
 
-  Future<void> runSearch(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        athletes = [];
-        events = [];
-      });
-      return;
-    }
+  final List<String> weightClasses = [
+    'All',
+    'Atomweight',
+    'Strawweight',
+    'Flyweight',
+    'Bantamweight',
+    'Featherweight',
+    'Lightweight',
+    'Welterweight',
+    'Middleweight',
+    'Light Heavyweight',
+    'Heavyweight',
+  ];
 
+  final List<String> countries = [
+    'All',
+    'Pakistan',
+    'India',
+    'Afghanistan',
+    'Bangladesh',
+    'UAE',
+  ];
+
+  final List<String> athleteTypes = [
+    'All',
+    'Amateur',
+    'Professional',
+  ];
+
+  final List<String> gyms = [
+    'All',
+    '3G MMA',
+    'Fight Fortress',
+    'Pakido',
+    'K7',
+  ];
+
+  final List<String> coaches = [
+    'All',
+    'Ovais Shah',
+    'Nadeem Akhter',
+    'Aleem',
+  ];
+
+  Future<void> runSearch() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      if (searchType == 'Athletes') {
-        final results = await athleteService.searchAthletes(query.trim());
+      final data = await athleteService.advancedSearchAthletes(
+        searchText: searchController.text.trim(),
+        weightClass: selectedWeightClass,
+        country: selectedCountry,
+        athleteType: selectedAthleteType,
+        gym: selectedGym,
+        coach: selectedCoach,
+      );
 
-        setState(() {
-          athletes = results;
-          events = [];
-        });
-      } else {
-        final results = await eventService.searchEvents(query.trim());
+      if (!mounted) return;
 
-        setState(() {
-          events = results;
-          athletes = [];
-        });
-      }
+      setState(() {
+        results = data;
+      });
     } catch (e) {
       if (!mounted) return;
 
@@ -71,81 +105,99 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Widget buildAthleteResults() {
-    if (athletes.isEmpty && searchController.text.isNotEmpty) {
-      return const Center(child: Text('No athletes found'));
-    }
+  Widget buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value == null) return;
 
-    return ListView.builder(
-      itemCount: athletes.length,
-      itemBuilder: (context, index) {
-        final athlete = athletes[index];
-
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.person),
-            ),
-            title: Text(athlete.fullName),
-            subtitle: Text(
-              '${athlete.nickname} • ${athlete.gym}\n'
-              '${athlete.weightClass} • ${athlete.wins}-${athlete.losses}-${athlete.draws}',
-            ),
-            isThreeLine: true,
-            trailing: Text('${athlete.rankingPoints} pts'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AthleteDetailScreen(
-                    athlete: athlete,
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
+          onChanged(value);
+          runSearch();
+        },
+      ),
     );
   }
 
-  Widget buildEventResults() {
-    if (events.isEmpty && searchController.text.isNotEmpty) {
-      return const Center(child: Text('No events found'));
-    }
-
-    return ListView.builder(
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.event),
-            ),
-            title: Text(event['name'] ?? ''),
-            subtitle: Text(
-              '${event['event_date'] ?? ''}\n'
-              '${event['venue'] ?? ''}, ${event['city'] ?? ''}',
-            ),
-            isThreeLine: true,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EventDetailScreen(
-                    event: event,
-                  ),
-                ),
-              );
-            },
+  Widget buildAthleteCard(Athlete athlete) {
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 6,
+      ),
+      child: ListTile(
+        leading: const CircleAvatar(
+          child: Icon(Icons.person),
+        ),
+        title: Text(
+          athlete.fullName,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
           ),
-        );
-      },
+        ),
+        subtitle: Text(
+          '${athlete.nickname}\n'
+          '${athlete.weightClass} • ${athlete.athleteType} • ${athlete.country}\n'
+          '${athlete.gym} • ${athlete.coach}',
+        ),
+        isThreeLine: true,
+        trailing: Text(
+          '${athlete.rankingPoints} pts',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AthleteDetailScreen(
+                athlete: athlete,
+              ),
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  void resetFilters() {
+    setState(() {
+      searchController.clear();
+      selectedWeightClass = 'All';
+      selectedCountry = 'All';
+      selectedAthleteType = 'All';
+      selectedGym = 'All';
+      selectedCoach = 'All';
+      results = [];
+    });
+
+    runSearch();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration.zero, () {
+      runSearch();
+    });
   }
 
   @override
@@ -156,78 +208,101 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasSearched = searchController.text.trim().isNotEmpty;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search'),
+        title: const Text('Advanced Search'),
+        actions: [
+          IconButton(
+            onPressed: resetFilters,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                labelText: searchType == 'Athletes'
-                    ? 'Search athletes, gym, weight class'
-                    : 'Search events, venue, city',
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
+          Expanded(
+            flex: 0,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search athlete name or nickname',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => runSearch(),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  buildDropdown(
+                    label: 'Weight Class',
+                    value: selectedWeightClass,
+                    items: weightClasses,
+                    onChanged: (value) {
+                      selectedWeightClass = value;
+                    },
+                  ),
+
+                  buildDropdown(
+                    label: 'Country',
+                    value: selectedCountry,
+                    items: countries,
+                    onChanged: (value) {
+                      selectedCountry = value;
+                    },
+                  ),
+
+                  buildDropdown(
+                    label: 'Athlete Type',
+                    value: selectedAthleteType,
+                    items: athleteTypes,
+                    onChanged: (value) {
+                      selectedAthleteType = value;
+                    },
+                  ),
+
+                  buildDropdown(
+                    label: 'Gym',
+                    value: selectedGym,
+                    items: gyms,
+                    onChanged: (value) {
+                      selectedGym = value;
+                    },
+                  ),
+
+                  buildDropdown(
+                    label: 'Coach',
+                    value: selectedCoach,
+                    items: coaches,
+                    onChanged: (value) {
+                      selectedCoach = value;
+                    },
+                  ),
+                ],
               ),
-              onChanged: runSearch,
             ),
           ),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButtonFormField<String>(
-              value: searchType,
-              decoration: const InputDecoration(
-                labelText: 'Search Type',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Athletes',
-                  child: Text('Athletes'),
-                ),
-                DropdownMenuItem(
-                  value: 'Events',
-                  child: Text('Events'),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  searchType = value!;
-                  athletes = [];
-                  events = [];
-                  searchController.clear();
-                });
-              },
-            ),
+          Expanded(
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : results.isEmpty
+                    ? const Center(
+                        child: Text('No athletes found'),
+                      )
+                    : ListView.builder(
+                        itemCount: results.length,
+                        itemBuilder: (context, index) {
+                          return buildAthleteCard(results[index]);
+                        },
+                      ),
           ),
-
-          const SizedBox(height: 10),
-
-          if (isLoading)
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (!hasSearched)
-            const Expanded(
-              child: Center(
-                child: Text('Start typing to search CageID'),
-              ),
-            )
-          else
-            Expanded(
-              child: searchType == 'Athletes'
-                  ? buildAthleteResults()
-                  : buildEventResults(),
-            ),
         ],
       ),
     );

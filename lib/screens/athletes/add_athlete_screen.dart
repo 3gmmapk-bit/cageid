@@ -18,6 +18,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
   final nameController = TextEditingController();
   final nicknameController = TextEditingController();
   final gymController = TextEditingController();
+  final coachController = TextEditingController();
   final weightClassController = TextEditingController();
   final countryController = TextEditingController();
   final bioController = TextEditingController();
@@ -75,6 +76,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
         fullName: nameController.text.trim(),
         nickname: nicknameController.text.trim(),
         gym: gymController.text.trim(),
+        coach: coachController.text.trim(),
         weightClass: weightClassController.text.trim(),
         country: countryController.text.trim(),
         bio: bioController.text.trim(),
@@ -84,8 +86,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
         wins: 0,
         losses: 0,
         draws: 0,
-        rankingPoints:
-            int.tryParse(rankingController.text.trim()) ?? 0,
+        rankingPoints: int.tryParse(rankingController.text.trim()) ?? 0,
         athleteType: athleteType,
       );
 
@@ -140,6 +141,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
     nameController.dispose();
     nicknameController.dispose();
     gymController.dispose();
+    coachController.dispose();
     weightClassController.dispose();
     countryController.dispose();
     bioController.dispose();
@@ -165,9 +167,7 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
               child: CircleAvatar(
                 radius: 55,
                 backgroundImage:
-                    imageBytes != null
-                        ? MemoryImage(imageBytes!)
-                        : null,
+                    imageBytes != null ? MemoryImage(imageBytes!) : null,
                 child: imageBytes == null
                     ? const Icon(
                         Icons.camera_alt,
@@ -192,6 +192,11 @@ class _AddAthleteScreenState extends State<AddAthleteScreen> {
             buildTextField(
               controller: gymController,
               label: 'Gym',
+            ),
+
+            buildTextField(
+              controller: coachController,
+              label: 'Coach',
             ),
 
             buildTextField(
