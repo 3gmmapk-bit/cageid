@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_gate.dart';
 import 'services/notification_service.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ Future<void> main() async {
     publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
+  // Keep this commented if notifications caused app startup issues before.
   // await NotificationService().initialize();
 
   runApp(const CageIDApp());
@@ -34,11 +36,7 @@ class CageIDApp extends StatelessWidget {
     return MaterialApp(
       title: dotenv.env['APP_NAME'] ?? 'CageID',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.red,
-      ),
+      theme: AppTheme.darkTheme,
       home: const AuthGate(),
     );
   }
